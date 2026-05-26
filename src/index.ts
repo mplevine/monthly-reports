@@ -14,7 +14,7 @@ import { rateLimit } from "express-rate-limit";
 import { agentHandler } from "./agent.js";
 
 const app = express();
-const PORT = process.env.PORT ?? 3000;
+const PORT = process.env.PORT ?? 3100;
 
 // Capture the raw request body so the SDK can verify the webhook signature.
 app.use(

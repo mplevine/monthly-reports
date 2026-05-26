@@ -58,7 +58,7 @@ npm install
 ### 2 – Configure environment variables
 
 ```bash
-cp .env.example .env
+npm
 # Edit .env with your credentials
 ```
 
@@ -80,7 +80,7 @@ npm start
 npm run dev
 ```
 
-The server starts on the port defined by `PORT` (default `3000`).
+The server starts on the port defined by `PORT` (default `3100`).
 
 A basic health-check is available at `GET /health`.
 
