@@ -50,8 +50,8 @@ GitHub Copilot Chat
 ### 1 – Clone and install
 
 ```bash
-git clone https://github.com/mplevine/montly-reports.git
-cd montly-reports
+git clone https://github.com/mplevine/monthly-reports.git
+cd monthly-reports
 npm install
 ```
 
