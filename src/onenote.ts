@@ -7,7 +7,6 @@
 
 import { Client } from "@microsoft/microsoft-graph-client";
 import { NodeHtmlMarkdown } from "node-html-markdown";
-import { createPublicClient, getGraphAccessToken } from "./onenote-auth.js";
 import { OneNoteConfig, OneNotePage, ReportPeriod } from "./types.js";
 
 /** Graph API page object (subset of fields we care about). */
@@ -40,31 +39,12 @@ function createGraphClient(accessToken: string): Client {
  */
 export async function fetchOneNotePages(
   config: OneNoteConfig,
-  period: ReportPeriod,
-): Promise<OneNotePage[]>;
-export async function fetchOneNotePages(
-  config: OneNoteConfig,
   accessToken: string,
   period: ReportPeriod,
-): Promise<OneNotePage[]>;
-export async function fetchOneNotePages(
-  config: OneNoteConfig,
-  accessTokenOrPeriod: string | ReportPeriod,
-  maybePeriod?: ReportPeriod,
 ): Promise<OneNotePage[]> {
-  const period =
-    typeof accessTokenOrPeriod === "string" ? maybePeriod : accessTokenOrPeriod;
-  if (!period) {
-    throw new Error("Report period is required to fetch OneNote pages.");
+  if (!accessToken) {
+    throw new Error("A Microsoft Graph bearer token is required to fetch OneNote pages.");
   }
-
-  const accessToken =
-    typeof accessTokenOrPeriod === "string"
-      ? accessTokenOrPeriod
-      : await getGraphAccessToken(
-          await createPublicClient(config.tenantId, config.clientId),
-          config.userId,
-        );
   const client = createGraphClient(accessToken);
 
   // Build ISO-8601 date range for the target month

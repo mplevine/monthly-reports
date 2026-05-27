@@ -70,6 +70,22 @@ jest.unstable_mockModule("node-html-markdown", () => ({
 const { fetchOneNotePages } = await import("../onenote.js");
 
 describe("fetchOneNotePages", () => {
+  test("requires a Microsoft Graph bearer token", async () => {
+    await expect(
+      fetchOneNotePages(
+        {
+          tenantId: "tenant-id",
+          clientId: "client-id",
+          userId: "bi-team@yourorg.onmicrosoft.com",
+          notebookName: "BI Team Notebook",
+          sectionName: "Meeting Notes",
+        },
+        "" as never,
+        { year: 2026, month: 5, monthName: "May" },
+      ),
+    ).rejects.toThrow("A Microsoft Graph bearer token is required to fetch OneNote pages.");
+  });
+
   test("uses delegated /me OneNote endpoints", async () => {
     apiCalls.length = 0;
 

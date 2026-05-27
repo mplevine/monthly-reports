@@ -14,9 +14,7 @@ import {
   parseRequestBody,
 } from "@copilot-extensions/preview-sdk";
 import { Request, Response } from "express";
-import { fetchOneNotePages, loadOneNoteConfig } from "./onenote.js";
 import { parseReportPeriod } from "./period-parser.js";
-import { generateReport } from "./report-generator.js";
 
 /**
  * POST /agent — entry point for all GitHub Copilot Extension requests.
@@ -60,31 +58,11 @@ export async function agentHandler(req: Request, res: Response): Promise<void> {
       ),
     );
 
-    const config = loadOneNoteConfig();
-    const pages = await fetchOneNotePages(config, period);
-
-    if (pages.length === 0) {
-      res.write(
-        createTextEvent(
-          `⚠️ No meeting notes found in **${config.notebookName} › ${config.sectionName}** ` +
-            `for ${period.monthName} ${period.year}.\n\n` +
-            `Please check that:\n` +
-            `- The correct notebook and section names are configured.\n` +
-            `- Pages were created during ${period.monthName} ${period.year}.\n`,
-        ),
-      );
-      res.end(createDoneEvent());
-      return;
-    }
-
-    res.write(
-      createTextEvent(
-        `✅ Found **${pages.length}** note${pages.length === 1 ? "" : "s"}. Generating report…\n\n`,
-      ),
+    throw new Error(
+      `The hosted extension workflow is no longer supported for OneNote access. ` +
+        `Use the local CLI workflow to acquire a Microsoft Graph token and fetch notes for ` +
+        `${period.monthName} ${period.year}.`,
     );
-
-    const email = await generateReport(pages, period, token);
-    res.write(createTextEvent(email));
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     res.write(
