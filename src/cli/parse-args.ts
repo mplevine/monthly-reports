@@ -31,15 +31,43 @@ function parsePeriod(value: string): ReportPeriod {
   return buildPeriod(year, month);
 }
 
-export function parseCliArgs(argv: string[], now = new Date()): CliCommand {
-  const [command, ...rest] = argv;
+function parseOptions(
+  command: "run" | "rerender",
+  tokens: string[],
+): Map<string, string> {
+  const allowedFlags = new Set(
+    command === "run" ? ["--period", "--model"] : ["--bundle", "--model"],
+  );
   const args = new Map<string, string>();
 
-  for (let index = 0; index < rest.length; index += 2) {
-    args.set(rest[index], rest[index + 1]);
+  for (let index = 0; index < tokens.length; index += 1) {
+    const token = tokens[index];
+
+    if (!token.startsWith("--")) {
+      throw new Error(`Unexpected positional argument "${token}" for the ${command} command.`);
+    }
+
+    if (!allowedFlags.has(token)) {
+      throw new Error(`Unknown argument "${token}" for the ${command} command.`);
+    }
+
+    const value = tokens[index + 1];
+    if (!value || value.startsWith("--")) {
+      throw new Error(`Missing value for "${token}".`);
+    }
+
+    args.set(token, value);
+    index += 1;
   }
 
+  return args;
+}
+
+export function parseCliArgs(argv: string[], now = new Date()): CliCommand {
+  const [command, ...rest] = argv;
+
   if (command === "run") {
+    const args = parseOptions(command, rest);
     return {
       command,
       period: args.has("--period") ? parsePeriod(args.get("--period")!) : defaultPeriod(now),
@@ -48,6 +76,7 @@ export function parseCliArgs(argv: string[], now = new Date()): CliCommand {
   }
 
   if (command === "rerender") {
+    const args = parseOptions(command, rest);
     const bundlePath = args.get("--bundle");
     if (!bundlePath) {
       throw new Error('Missing required argument "--bundle" for the rerender command.');

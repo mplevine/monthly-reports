@@ -34,6 +34,36 @@ describe("parseCliArgs", () => {
     );
   });
 
+  test("requires a value for --model", () => {
+    expect(() => parseCliArgs(["run", "--model"])).toThrow(
+      'Missing value for "--model".',
+    );
+  });
+
+  test("rejects unknown positional tokens", () => {
+    expect(() => parseCliArgs(["run", "garbage"])).toThrow(
+      'Unexpected positional argument "garbage" for the run command.',
+    );
+  });
+
+  test("requires a real bundle path for rerender", () => {
+    expect(() => parseCliArgs(["rerender", "--bundle", "--model"])).toThrow(
+      'Missing value for "--bundle".',
+    );
+  });
+
+  test("requires a value for --period", () => {
+    expect(() => parseCliArgs(["run", "--period"])).toThrow(
+      'Missing value for "--period".',
+    );
+  });
+
+  test("rejects unknown flags", () => {
+    expect(() => parseCliArgs(["run", "--bogus", "value"])).toThrow(
+      'Unknown argument "--bogus" for the run command.',
+    );
+  });
+
   test("defaults to the previous UTC calendar month in positive-offset time zones", () => {
     const result = spawnSync(
       process.execPath,
