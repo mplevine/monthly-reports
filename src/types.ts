@@ -22,7 +22,7 @@ export interface OneNoteConfig {
   tenantId: string;
   /** Azure AD application (client) ID */
   clientId: string;
-  /** UPN or object ID of the user whose OneNote is being accessed */
+  /** UPN/email address of the user whose OneNote is being accessed */
   userId: string;
 }
 
@@ -43,6 +43,7 @@ export interface RepoConfigFile {
   onenote: {
     tenantId: string;
     clientId: string;
+    /** UPN/email address used for delegated OneNote auth */
     userId: string;
     notebookName: string;
     sectionName: string;

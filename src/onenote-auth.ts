@@ -60,6 +60,8 @@ export async function getGraphAccessToken(
   app: GraphAuthApp,
   loginHint: string,
 ): Promise<string> {
+  validateDelegatedUserId(loginHint);
+
   const scopes = ["Notes.Read"];
   const accounts = await app.getAllAccounts();
   const preferredAccount = accounts.find(
@@ -160,4 +162,16 @@ function hasMatchingAccessToken(
     result.accessToken.length > 0 &&
     result.account?.username === loginHint
   );
+}
+
+function validateDelegatedUserId(loginHint: string): void {
+  if (!isUserPrincipalName(loginHint)) {
+    throw new Error(
+      "Delegated OneNote auth requires onenote.userId to be a UPN/email address.",
+    );
+  }
+}
+
+function isUserPrincipalName(value: string): boolean {
+  return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value);
 }

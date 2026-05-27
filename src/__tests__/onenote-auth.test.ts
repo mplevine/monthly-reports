@@ -120,6 +120,23 @@ describe("getGraphAccessToken", () => {
       getGraphAccessToken(app as never, "bi-team@yourorg.onmicrosoft.com"),
     ).rejects.toThrow("Failed to acquire a delegated Microsoft Graph access token.");
   });
+
+  test("rejects object-id style delegated auth users up front", async () => {
+    const app = {
+      getAllAccounts: jest.fn(),
+      acquireTokenSilent: jest.fn(),
+      acquireTokenInteractive: jest.fn(),
+      acquireTokenByDeviceCode: jest.fn(),
+    };
+
+    await expect(
+      getGraphAccessToken(app as never, "11111111-2222-3333-4444-555555555555"),
+    ).rejects.toThrow(
+      "Delegated OneNote auth requires onenote.userId to be a UPN/email address.",
+    );
+    expect(app.getAllAccounts).not.toHaveBeenCalled();
+    expect(app.acquireTokenInteractive).not.toHaveBeenCalled();
+  });
 });
 
 describe("buildBrowserLaunchCommand", () => {
