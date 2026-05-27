@@ -1,14 +1,13 @@
 /**
  * OneNote client that fetches meeting-note pages from Microsoft Graph API.
  *
- * Authentication uses the OAuth 2.0 client-credentials flow via MSAL so the
- * agent can run as an unattended service.  The Azure AD application must be
- * granted the `Notes.Read.All` application permission.
+ * Authentication uses delegated Microsoft Graph access tokens for the target
+ * OneNote user, either supplied directly or acquired via MSAL.
  */
 
-import { ConfidentialClientApplication } from "@azure/msal-node";
 import { Client } from "@microsoft/microsoft-graph-client";
 import { NodeHtmlMarkdown } from "node-html-markdown";
+import { createPublicClient, getGraphAccessToken } from "./onenote-auth.js";
 import { OneNoteConfig, OneNotePage, ReportPeriod } from "./types.js";
 
 /** Graph API page object (subset of fields we care about). */
@@ -21,29 +20,12 @@ interface GraphOneNotePage {
 }
 
 /**
- * Creates an authenticated Microsoft Graph client using app-only (client
- * credentials) authentication.
+ * Creates an authenticated Microsoft Graph client from a bearer token.
  */
-async function createGraphClient(config: OneNoteConfig): Promise<Client> {
-  const msalApp = new ConfidentialClientApplication({
-    auth: {
-      clientId: config.clientId,
-      authority: `https://login.microsoftonline.com/${config.tenantId}`,
-      clientSecret: config.clientSecret,
-    },
-  });
-
+function createGraphClient(accessToken: string): Client {
   return Client.initWithMiddleware({
     authProvider: {
-      getAccessToken: async () => {
-        const result = await msalApp.acquireTokenByClientCredential({
-          scopes: ["https://graph.microsoft.com/.default"],
-        });
-        if (!result?.accessToken) {
-          throw new Error("Failed to acquire Microsoft Graph access token.");
-        }
-        return result.accessToken;
-      },
+      getAccessToken: async () => accessToken,
     },
   });
 }
@@ -59,12 +41,35 @@ async function createGraphClient(config: OneNoteConfig): Promise<Client> {
 export async function fetchOneNotePages(
   config: OneNoteConfig,
   period: ReportPeriod,
+): Promise<OneNotePage[]>;
+export async function fetchOneNotePages(
+  config: OneNoteConfig,
+  accessToken: string,
+  period: ReportPeriod,
+): Promise<OneNotePage[]>;
+export async function fetchOneNotePages(
+  config: OneNoteConfig,
+  accessTokenOrPeriod: string | ReportPeriod,
+  maybePeriod?: ReportPeriod,
 ): Promise<OneNotePage[]> {
-  const client = await createGraphClient(config);
+  const period =
+    typeof accessTokenOrPeriod === "string" ? maybePeriod : accessTokenOrPeriod;
+  if (!period) {
+    throw new Error("Report period is required to fetch OneNote pages.");
+  }
+
+  const accessToken =
+    typeof accessTokenOrPeriod === "string"
+      ? accessTokenOrPeriod
+      : await getGraphAccessToken(
+          await createPublicClient(config.tenantId, config.clientId),
+          config.userId,
+        );
+  const client = createGraphClient(accessToken);
 
   // Build ISO-8601 date range for the target month
-  const start = new Date(period.year, period.month - 1, 1).toISOString();
-  const end = new Date(period.year, period.month, 1).toISOString();
+  const start = new Date(Date.UTC(period.year, period.month - 1, 1)).toISOString();
+  const end = new Date(Date.UTC(period.year, period.month, 1)).toISOString();
 
   // Resolve the user's notebooks and find the configured section
   const sectionId = await resolveSectionId(client, config);
@@ -159,7 +164,6 @@ export function loadOneNoteConfig(): OneNoteConfig {
   const required: (keyof OneNoteConfig)[] = [
     "tenantId",
     "clientId",
-    "clientSecret",
     "userId",
     "notebookName",
     "sectionName",
@@ -168,7 +172,6 @@ export function loadOneNoteConfig(): OneNoteConfig {
   const envMap: Record<keyof OneNoteConfig, string> = {
     tenantId: "AZURE_TENANT_ID",
     clientId: "AZURE_CLIENT_ID",
-    clientSecret: "AZURE_CLIENT_SECRET",
     userId: "ONENOTE_USER_ID",
     notebookName: "ONENOTE_NOTEBOOK_NAME",
     sectionName: "ONENOTE_SECTION_NAME",

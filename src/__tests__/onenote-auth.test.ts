@@ -1,0 +1,44 @@
+import { describe, expect, jest, test } from "@jest/globals";
+import { getGraphAccessToken } from "../onenote-auth.js";
+
+describe("getGraphAccessToken", () => {
+  test("uses interactive sign-in after silent auth misses", async () => {
+    const app = {
+      getAllAccounts: jest.fn(async () => []),
+      acquireTokenSilent: jest.fn(),
+      acquireTokenInteractive: jest.fn(async () => ({
+        accessToken: "graph-token",
+      })),
+      acquireTokenByDeviceCode: jest.fn(),
+    };
+
+    await expect(
+      getGraphAccessToken(app as never, "bi-team@yourorg.onmicrosoft.com"),
+    ).resolves.toBe("graph-token");
+    expect(app.acquireTokenInteractive).toHaveBeenCalledTimes(1);
+    expect(app.acquireTokenInteractive).toHaveBeenCalledWith(
+      expect.objectContaining({
+        scopes: ["Notes.Read"],
+        loginHint: "bi-team@yourorg.onmicrosoft.com",
+        openBrowser: expect.any(Function),
+      }),
+    );
+  });
+
+  test("throws a consistent error when interactive and device code auth both fail", async () => {
+    const app = {
+      getAllAccounts: jest.fn(async () => []),
+      acquireTokenSilent: jest.fn(),
+      acquireTokenInteractive: jest.fn(async () => {
+        throw new Error("interactive failed");
+      }),
+      acquireTokenByDeviceCode: jest.fn(async () => {
+        throw new Error("device failed");
+      }),
+    };
+
+    await expect(
+      getGraphAccessToken(app as never, "bi-team@yourorg.onmicrosoft.com"),
+    ).rejects.toThrow("Failed to acquire a delegated Microsoft Graph access token.");
+  });
+});

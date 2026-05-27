@@ -22,10 +22,21 @@ export interface OneNoteConfig {
   tenantId: string;
   /** Azure AD application (client) ID */
   clientId: string;
-  /** Azure AD client secret */
-  clientSecret: string;
   /** UPN or object ID of the user whose OneNote is being accessed */
   userId: string;
+}
+
+export interface OneNoteSourceBundle {
+  schemaVersion: 1;
+  createdAt: string;
+  period: ReportPeriod;
+  source: {
+    kind: "onenote";
+    userId: string;
+    notebookName: string;
+    sectionName: string;
+  };
+  pages: OneNotePage[];
 }
 
 export interface RepoConfigFile {
