@@ -15,6 +15,7 @@ describe("cli entrypoint", () => {
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("Usage:");
     expect(result.stdout).toContain("monthly-reports run");
+    expect(result.stdout).toContain("rerender is not available in this build");
   });
 
   test.each([
@@ -32,7 +33,7 @@ describe("cli entrypoint", () => {
 
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("Usage:");
-    expect(result.stdout).toContain("monthly-reports rerender");
+    expect(result.stdout).toContain("rerender is not available in this build");
   });
 
   test("rejects rerender until that command is implemented", () => {

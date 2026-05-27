@@ -4,7 +4,8 @@ import { pathToFileURL } from "node:url";
 
 const HELP_TEXT = `Usage:
   monthly-reports run [--period YYYY-MM] [--model MODEL]
-  monthly-reports rerender --bundle PATH [--model MODEL]
+
+rerender is not available in this build.
 `;
 
 function isHelpRequest(argv: string[]): boolean {
