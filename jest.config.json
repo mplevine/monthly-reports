@@ -16,13 +16,11 @@
   "roots": ["<rootDir>/src"],
   "testMatch": ["**/__tests__/**/*.test.ts"],
   "moduleNameMapper": {
-    "^@copilot-extensions/preview-sdk$": "<rootDir>/src/__mocks__/copilot-sdk.ts",
     "^(\\.{1,2}/.*)\\.js$": "$1"
   },
   "collectCoverageFrom": [
     "src/**/*.ts",
     "!src/**/__tests__/**",
-    "!src/**/__mocks__/**",
-    "!src/index.ts"
+    "!src/cli.ts"
   ]
 }

@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { parseCliArgs, renderHelpText } from "./cli/parse-args.js";
 import { rerenderReportCommand } from "./commands/rerender-report.js";
 import { runReportCommand } from "./commands/run-report.js";
@@ -9,7 +11,7 @@ function isHelpRequest(argv: string[]): boolean {
 
 export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
   if (isHelpRequest(argv)) {
-    process.stdout.write(renderHelpText());
+    console.log(renderHelpText());
     return 0;
   }
 

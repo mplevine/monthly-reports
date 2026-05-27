@@ -5,10 +5,13 @@ const MONTH_NAMES = [
   "July", "August", "September", "October", "November", "December",
 ] as const;
 
-const HELP_TEXT = `Usage:
-  monthly-reports run [--period YYYY-MM] [--model MODEL]
-  monthly-reports rerender --bundle PATH [--model MODEL]
-`;
+const HELP_TEXT = [
+  "monthly-reports run [--period YYYY-MM] [--model MODEL_ID]",
+  "monthly-reports rerender --bundle <path> [--model MODEL_ID]",
+  "",
+  "run       Fetch OneNote notes, generate a report draft, and write artifacts.",
+  "rerender  Reuse an existing source bundle and generate a new report draft.",
+].join("\n");
 
 function buildPeriod(year: number, month: number): ReportPeriod {
   return { year, month, monthName: MONTH_NAMES[month - 1] };
