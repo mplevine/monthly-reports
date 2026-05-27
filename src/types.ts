@@ -28,6 +28,31 @@ export interface OneNoteConfig {
   userId: string;
 }
 
+export interface RepoConfigFile {
+  onenote: {
+    tenantId: string;
+    clientId: string;
+    userId: string;
+    notebookName: string;
+    sectionName: string;
+  };
+  generation: {
+    provider: "github_models";
+    model: string;
+    temperature: number;
+    maxTokens: number;
+  };
+  output: {
+    rootDirectory: string;
+  };
+}
+
+export interface AppConfig extends RepoConfigFile {
+  secrets: {
+    githubToken: string;
+  };
+}
+
 /** Month and year parsed from a user's Copilot chat message. */
 export interface ReportPeriod {
   /** Full month name, e.g. "January" */
@@ -59,3 +84,7 @@ export interface ReportEmailData {
   /** Optional raw AI-generated email body (used when structured parsing is unavailable) */
   rawBody?: string;
 }
+
+export type CliCommand =
+  | { command: "run"; period: ReportPeriod; modelOverride?: string }
+  | { command: "rerender"; bundlePath: string; modelOverride?: string };
