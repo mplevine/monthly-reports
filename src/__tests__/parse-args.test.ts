@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, jest, test } from "@jest/globals";
+import { spawnSync } from "node:child_process";
 import { parseCliArgs } from "../cli/parse-args.js";
 
 describe("parseCliArgs", () => {
@@ -31,5 +32,35 @@ describe("parseCliArgs", () => {
     expect(() => parseCliArgs(["rerender"])).toThrow(
       'Missing required argument "--bundle" for the rerender command.',
     );
+  });
+
+  test("defaults to the previous UTC calendar month in positive-offset time zones", () => {
+    const result = spawnSync(
+      process.execPath,
+      [
+        "--loader",
+        "ts-node/esm",
+        "--input-type=module",
+        "--eval",
+        [
+          'import { parseCliArgs } from "./src/cli/parse-args.ts";',
+          'console.log(JSON.stringify(parseCliArgs(["run"], new Date("2026-01-15T12:00:00Z"))));',
+        ].join(" "),
+      ],
+      {
+        cwd: process.cwd(),
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          TZ: "Pacific/Kiritimati",
+        },
+      },
+    );
+
+    expect(result.status).toBe(0);
+    expect(JSON.parse(result.stdout.trim())).toEqual({
+      command: "run",
+      period: { year: 2025, month: 12, monthName: "December" },
+    });
   });
 });

@@ -10,8 +10,10 @@ function buildPeriod(year: number, month: number): ReportPeriod {
 }
 
 function defaultPeriod(now: Date): ReportPeriod {
-  const previous = new Date(now.getUTCFullYear(), now.getUTCMonth() - 1, 1);
-  return buildPeriod(previous.getUTCFullYear(), previous.getUTCMonth() + 1);
+  const currentUtcMonth = now.getUTCMonth() + 1;
+  const year = currentUtcMonth === 1 ? now.getUTCFullYear() - 1 : now.getUTCFullYear();
+  const month = currentUtcMonth === 1 ? 12 : currentUtcMonth - 1;
+  return buildPeriod(year, month);
 }
 
 function parsePeriod(value: string): ReportPeriod {
