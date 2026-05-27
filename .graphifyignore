@@ -1,0 +1,87 @@
+# .NET
+bin/
+obj/
+.vs/
+publish/
+
+# Node / Next.js
+node_modules/
+.next/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+dist/
+build/
+coverage/
+*.log
+.env*
+
+# Frontend build/cache artifacts
+*.pem
+.vercel
+*.tsbuildinfo
+next-env.d.ts
+/out/
+
+# VS Code
+.vscode/
+
+# Temporary development folder
+_temp/
+
+# Logs
+/logs/
+frontend-admin/logs/*
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Sensitive configuration files (production secrets)
+appsettings.Production.json
+appsettings.Development.json
+appsettings.*.json
+!appsettings.json
+!appsettings.*.template.json
+
+# Publish profiles with production paths
+**/PublishProfiles/*.pubxml
+**/PublishProfiles/*.pubxml.user
+!**/PublishProfiles/*.pubxml.template
+
+
+logs/
+# Excel temporary lock files (e.g., ~$Workbook.xlsx)
+~$*.xls*
+/database/schema-comparisons/
+
+# Git worktrees
+.worktrees/
+
+
+# Brainstorm visual companion
+.superpowers/
+
+# Graphify output/cache noise
+**/graphify-out/
+.graphify*
+!.graphifyignore
+
+# Vendor/build/minified noise
+**/vendor/
+**/node_modules/
+**/.next/
+**/dist/
+**/build/
+**/out/
+**/coverage/
+**/bin/
+**/obj/
+**/.venv/
+**/venv/
+**/*.min.js
+**/*.min.css
+**/*.bundle.js
+**/*.map
