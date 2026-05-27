@@ -11,6 +11,20 @@ type GraphAuthApp = {
   acquireTokenByDeviceCode: PublicClientApplication["acquireTokenByDeviceCode"];
 };
 
+interface BrowserLaunchCommand {
+  command: string;
+  args: string[];
+}
+
+interface TokenResult {
+  accessToken?: string;
+  account?:
+    | {
+        username?: string;
+      }
+    | null;
+}
+
 export async function createPublicClient(
   tenantId: string,
   clientId: string,
@@ -58,7 +72,7 @@ export async function getGraphAccessToken(
         account: preferredAccount,
         scopes,
       });
-      if (silent?.accessToken) {
+      if (hasMatchingAccessToken(silent, loginHint)) {
         return silent.accessToken;
       }
     } catch {
@@ -72,7 +86,7 @@ export async function getGraphAccessToken(
       loginHint,
       openBrowser,
     });
-    if (interactive?.accessToken) {
+    if (hasMatchingAccessToken(interactive, loginHint)) {
       return interactive.accessToken;
     }
   } catch {
@@ -86,7 +100,7 @@ export async function getGraphAccessToken(
         console.log(message);
       },
     });
-    if (device?.accessToken) {
+    if (hasMatchingAccessToken(device, loginHint)) {
       return device.accessToken;
     }
   } catch {
@@ -97,12 +111,7 @@ export async function getGraphAccessToken(
 }
 
 function openBrowser(url: string): Promise<void> {
-  const launcher =
-    process.platform === "win32"
-      ? { command: "cmd", args: ["/c", "start", "", url] }
-      : process.platform === "darwin"
-        ? { command: "open", args: [url] }
-        : { command: "xdg-open", args: [url] };
+  const launcher = buildBrowserLaunchCommand(url);
 
   return new Promise((resolve, reject) => {
     const child = spawn(launcher.command, launcher.args, {
@@ -116,4 +125,39 @@ function openBrowser(url: string): Promise<void> {
       resolve();
     });
   });
+}
+
+export function buildBrowserLaunchCommand(
+  url: string,
+  platform: NodeJS.Platform = process.platform,
+): BrowserLaunchCommand {
+  if (platform === "win32") {
+    return {
+      command: "explorer.exe",
+      args: [url],
+    };
+  }
+
+  if (platform === "darwin") {
+    return {
+      command: "open",
+      args: [url],
+    };
+  }
+
+  return {
+    command: "xdg-open",
+    args: [url],
+  };
+}
+
+function hasMatchingAccessToken(
+  result: TokenResult | null | undefined,
+  loginHint: string,
+): result is TokenResult & { accessToken: string; account: { username: string } } {
+  return (
+    typeof result?.accessToken === "string" &&
+    result.accessToken.length > 0 &&
+    result.account?.username === loginHint
+  );
 }

@@ -1,5 +1,8 @@
 import { describe, expect, jest, test } from "@jest/globals";
-import { getGraphAccessToken } from "../onenote-auth.js";
+import {
+  buildBrowserLaunchCommand,
+  getGraphAccessToken,
+} from "../onenote-auth.js";
 
 describe("getGraphAccessToken", () => {
   test("uses interactive sign-in after silent auth misses", async () => {
@@ -8,6 +11,7 @@ describe("getGraphAccessToken", () => {
       acquireTokenSilent: jest.fn(),
       acquireTokenInteractive: jest.fn(async () => ({
         accessToken: "graph-token",
+        account: { username: "bi-team@yourorg.onmicrosoft.com" },
       })),
       acquireTokenByDeviceCode: jest.fn(),
     };
@@ -49,6 +53,7 @@ describe("getGraphAccessToken", () => {
       acquireTokenInteractive: jest.fn(async () => ({})),
       acquireTokenByDeviceCode: jest.fn(async () => ({
         accessToken: "device-token",
+        account: { username: "bi-team@yourorg.onmicrosoft.com" },
       })),
     };
 
@@ -65,6 +70,7 @@ describe("getGraphAccessToken", () => {
       acquireTokenSilent: jest.fn(),
       acquireTokenInteractive: jest.fn(async () => ({
         accessToken: "interactive-token",
+        account: { username: "bi-team@yourorg.onmicrosoft.com" },
       })),
       acquireTokenByDeviceCode: jest.fn(),
     };
@@ -74,5 +80,58 @@ describe("getGraphAccessToken", () => {
     ).resolves.toBe("interactive-token");
     expect(app.acquireTokenSilent).not.toHaveBeenCalled();
     expect(app.acquireTokenInteractive).toHaveBeenCalledTimes(1);
+  });
+
+  test("falls back to device code when interactive auth returns a token for the wrong user", async () => {
+    const app = {
+      getAllAccounts: jest.fn(async () => []),
+      acquireTokenSilent: jest.fn(),
+      acquireTokenInteractive: jest.fn(async () => ({
+        accessToken: "wrong-user-token",
+        account: { username: "other-user@yourorg.onmicrosoft.com" },
+      })),
+      acquireTokenByDeviceCode: jest.fn(async () => ({
+        accessToken: "device-token",
+        account: { username: "bi-team@yourorg.onmicrosoft.com" },
+      })),
+    };
+
+    await expect(
+      getGraphAccessToken(app as never, "bi-team@yourorg.onmicrosoft.com"),
+    ).resolves.toBe("device-token");
+    expect(app.acquireTokenByDeviceCode).toHaveBeenCalledTimes(1);
+  });
+
+  test("rejects device code auth when it returns a token for the wrong user", async () => {
+    const app = {
+      getAllAccounts: jest.fn(async () => []),
+      acquireTokenSilent: jest.fn(),
+      acquireTokenInteractive: jest.fn(async () => ({
+        accessToken: "wrong-user-token",
+        account: { username: "other-user@yourorg.onmicrosoft.com" },
+      })),
+      acquireTokenByDeviceCode: jest.fn(async () => ({
+        accessToken: "wrong-device-token",
+        account: { username: "other-user@yourorg.onmicrosoft.com" },
+      })),
+    };
+
+    await expect(
+      getGraphAccessToken(app as never, "bi-team@yourorg.onmicrosoft.com"),
+    ).rejects.toThrow("Failed to acquire a delegated Microsoft Graph access token.");
+  });
+});
+
+describe("buildBrowserLaunchCommand", () => {
+  test("uses explorer on Windows so auth URLs are not parsed by cmd", () => {
+    expect(
+      buildBrowserLaunchCommand(
+        "https://login.microsoftonline.com/?a=1&b=2",
+        "win32",
+      ),
+    ).toEqual({
+      command: "explorer.exe",
+      args: ["https://login.microsoftonline.com/?a=1&b=2"],
+    });
   });
 });
