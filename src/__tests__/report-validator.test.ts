@@ -2,9 +2,33 @@ import { describe, expect, test } from "@jest/globals";
 import { validateReportDraft } from "../report-validator.js";
 
 describe("validateReportDraft", () => {
+  test("throws when the canonical subject wrapper is missing", () => {
+    expect(() =>
+      validateReportDraft(`────────────────────────────────────────────────────────────
+PROJECT HIGHLIGHTS
+
+- Highlight
+
+────────────────────────────────────────────────────────────
+KEY WINS & METRICS
+
+- Win
+
+────────────────────────────────────────────────────────────
+UPCOMING PRIORITIES
+
+- Priority
+
+Best regards,
+BI Team`),
+    ).toThrow("Missing canonical report subject wrapper.");
+  });
+
   test("throws when the canonical sections are missing", () => {
     expect(() =>
-      validateReportDraft("**Subject: BI Team Monthly Report – May 2026**\n\nHi team"),
+      validateReportDraft(
+        "**Subject: BI Team Monthly Report – May 2026**\n\n────────────────────────────────────────────────────────────\n\nHi team",
+      ),
     ).toThrow('Missing required section heading "PROJECT HIGHLIGHTS".');
   });
 

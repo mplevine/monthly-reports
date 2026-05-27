@@ -6,12 +6,17 @@ const REQUIRED_HEADINGS = [
 ] as const;
 const SECTION_DIVIDER = "─".repeat(60);
 const SIGNATURE_LINE = "BI Team";
+const SUBJECT_LINE_PATTERN = /^\*\*Subject: BI Team Monthly Report – [A-Za-z]+ \d{4}\*\*$/;
 
 export function validateReportDraft(draft: string): void {
   const lines = draft
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
+
+  if (!SUBJECT_LINE_PATTERN.test(lines[0] ?? "") || lines[1] !== SECTION_DIVIDER) {
+    throw new Error("Missing canonical report subject wrapper.");
+  }
 
   let expectedHeadingIndex = 0;
 
