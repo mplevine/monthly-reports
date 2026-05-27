@@ -7,6 +7,7 @@ const REQUIRED_HEADINGS = [
 const SECTION_DIVIDER = "─".repeat(60);
 const SIGNATURE_LINE = "BI Team";
 const SUBJECT_LINE_PATTERN = /^\*\*Subject: BI Team Monthly Report – [A-Za-z]+ \d{4}\*\*$/;
+const SECTION_HEADINGS = REQUIRED_HEADINGS.slice(0, 3);
 
 export function validateReportDraft(draft: string): void {
   const lines = draft
@@ -24,37 +25,93 @@ export function validateReportDraft(draft: string): void {
     );
   }
 
-  let expectedHeadingIndex = 0;
+  let cursor = 2;
 
-  for (const [index, line] of lines.entries()) {
-    if (!REQUIRED_HEADINGS.includes(line as (typeof REQUIRED_HEADINGS)[number])) {
-      continue;
+  for (let headingIndex = 0; headingIndex < SECTION_HEADINGS.length; headingIndex += 1) {
+    const heading = SECTION_HEADINGS[headingIndex];
+    if (lines[cursor] !== heading) {
+      throw new Error(`Expected section heading "${heading}" in canonical order.`);
     }
 
-    const expectedHeading = REQUIRED_HEADINGS[expectedHeadingIndex];
-    if (line !== expectedHeading) {
+    cursor += 1;
+
+    const contentStart = cursor;
+    while (
+      cursor < lines.length &&
+      lines[cursor] !== SECTION_DIVIDER &&
+      lines[cursor] !== REQUIRED_HEADINGS[3]
+    ) {
+      cursor += 1;
+    }
+
+    if (cursor === contentStart) {
+      throw new Error(`Section "${heading}" must contain content.`);
+    }
+
+    const contentLines = lines.slice(contentStart, cursor);
+    const misplacedNextHeading = headingIndex < SECTION_HEADINGS.length - 1
+      ? contentLines.find((line) => line === SECTION_HEADINGS[headingIndex + 1])
+      : undefined;
+    if (misplacedNextHeading) {
       throw new Error(
-        `Expected section heading "${expectedHeading}" in canonical order.`,
+        `Expected divider before section heading "${misplacedNextHeading}".`,
       );
     }
 
-    if (expectedHeadingIndex < 3 && lines[index - 1] !== SECTION_DIVIDER) {
-      throw new Error(`Expected divider before section heading "${line}".`);
+    const firstContentIsBullet = isBulletLine(contentLines[0]);
+    const unexpectedContent = contentLines.find(
+      (line) => isBulletLine(line) !== firstContentIsBullet,
+    );
+    if (unexpectedContent) {
+      throw new Error(
+        `Unexpected content outside canonical sections: "${unexpectedContent}".`,
+      );
     }
 
-    expectedHeadingIndex += 1;
-  }
+    if (headingIndex < SECTION_HEADINGS.length - 1) {
+      if (lines[cursor] === SECTION_HEADINGS[headingIndex + 1]) {
+        throw new Error(
+          `Expected divider before section heading "${SECTION_HEADINGS[headingIndex + 1]}".`,
+        );
+      }
 
-  for (let index = expectedHeadingIndex; index < REQUIRED_HEADINGS.length; index += 1) {
-    const heading = REQUIRED_HEADINGS[index];
-    if (!lines.includes(heading)) {
-      throw new Error(`Missing required section heading "${heading}".`);
+      if (lines[cursor] !== SECTION_DIVIDER) {
+        throw new Error(
+          `Unexpected content outside canonical sections: "${lines[cursor] ?? ""}".`,
+        );
+      }
+
+      cursor += 1;
+      if (lines[cursor] !== SECTION_HEADINGS[headingIndex + 1]) {
+        throw new Error(
+          `Expected section heading "${SECTION_HEADINGS[headingIndex + 1]}" in canonical order.`,
+        );
+      }
+      continue;
     }
 
-    throw new Error(`Expected section heading "${heading}" in canonical order.`);
+    if (lines[cursor] !== REQUIRED_HEADINGS[3]) {
+      throw new Error(
+        `Unexpected content outside canonical sections: "${lines[cursor + Number(lines[cursor] === SECTION_DIVIDER)] ?? lines[cursor] ?? ""}".`,
+      );
+    }
   }
 
-  if (lines[lines.length - 1] !== SIGNATURE_LINE) {
+  if (lines[cursor] !== REQUIRED_HEADINGS[3]) {
+    throw new Error(`Missing required section heading "${REQUIRED_HEADINGS[3]}".`);
+  }
+
+  if (lines[cursor + 1] !== SIGNATURE_LINE) {
     throw new Error(`Missing required closing line "${SIGNATURE_LINE}".`);
   }
+
+  if (cursor + 2 !== lines.length) {
+    throw new Error(
+      `Unexpected content outside canonical sections: "${lines[cursor + 2]}".`,
+    );
+  }
+}
+
+function isBulletLine(line: string | undefined): boolean {
+  return Boolean(line && /^[-*]\s+/.test(line));
 }

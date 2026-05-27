@@ -104,4 +104,52 @@ Best regards,
 BI Team`),
     ).toThrow('Expected divider before section heading "KEY WINS & METRICS".');
   });
+
+  test("throws when a required section is empty", () => {
+    expect(() =>
+      validateReportDraft(`**Subject: BI Team Monthly Report – May 2026**
+
+────────────────────────────────────────────────────────────
+PROJECT HIGHLIGHTS
+
+────────────────────────────────────────────────────────────
+KEY WINS & METRICS
+
+- Win
+
+────────────────────────────────────────────────────────────
+UPCOMING PRIORITIES
+
+- Priority
+
+Best regards,
+BI Team`),
+    ).toThrow('Section "PROJECT HIGHLIGHTS" must contain content.');
+  });
+
+  test("throws when unexpected trailing content appears after upcoming priorities", () => {
+    expect(() =>
+      validateReportDraft(`**Subject: BI Team Monthly Report – May 2026**
+
+────────────────────────────────────────────────────────────
+PROJECT HIGHLIGHTS
+
+- Highlight
+
+────────────────────────────────────────────────────────────
+KEY WINS & METRICS
+
+- Win
+
+────────────────────────────────────────────────────────────
+UPCOMING PRIORITIES
+
+- Priority
+
+Additional Notes
+
+Best regards,
+BI Team`),
+    ).toThrow('Unexpected content outside canonical sections: "Additional Notes".');
+  });
 });

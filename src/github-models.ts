@@ -7,6 +7,7 @@ export function createGitHubModelsProvider(
   fetchImpl: typeof fetch = fetch,
 ): ModelProvider {
   return {
+    id: "github_models",
     async generate(request: ModelRequest): Promise<ModelResponse> {
       const response = await fetchImpl(INFERENCE_URL, {
         method: "POST",

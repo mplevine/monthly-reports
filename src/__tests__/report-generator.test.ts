@@ -52,7 +52,7 @@ describe("generateReport", () => {
       prompts: { system: "ignored", user: "ignored" },
     }));
 
-    const provider: ModelProvider = { generate };
+    const provider: ModelProvider = { id: "github_models", generate };
 
     const result = await generateReport(
       MAY_2026_BUNDLE,
@@ -84,6 +84,11 @@ PROJECT HIGHLIGHTS
 `)).toBe(true);
     expect(result.draft).toContain("Dashboard rollout remained on track.");
     expect(result.auditTrail.model).toBe("openai/gpt-4.1");
+    expect(result.auditTrail.generation).toEqual({
+      provider: "github_models",
+      temperature: 0.2,
+      maxTokens: 1200,
+    });
     expect(result.auditTrail.usage).toEqual({
       prompt_tokens: 100,
       completion_tokens: 25,

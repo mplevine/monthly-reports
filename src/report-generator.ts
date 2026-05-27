@@ -44,6 +44,11 @@ export async function generateReport(
     auditTrail: {
       generatedAt: new Date().toISOString(),
       model,
+      generation: {
+        provider: provider.id,
+        temperature,
+        maxTokens,
+      },
       prompts: {
         system: systemPrompt,
         user: userPrompt,

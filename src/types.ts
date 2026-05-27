@@ -111,6 +111,7 @@ export interface ModelResponse {
 }
 
 export interface ModelProvider {
+  id: string;
   generate(request: ModelRequest): Promise<ModelResponse>;
 }
 
@@ -119,6 +120,11 @@ export interface ReportGenerationResult {
   auditTrail: {
     generatedAt: string;
     model: string;
+    generation: {
+      provider: string;
+      temperature: number;
+      maxTokens: number;
+    };
     prompts: {
       system: string;
       user: string;
