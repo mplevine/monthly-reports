@@ -58,14 +58,10 @@ export function validateReportDraft(draft: string): void {
       );
     }
 
-    const firstContentIsBullet = isBulletLine(contentLines[0]);
-    const unexpectedContent = contentLines.find(
-      (line) => isBulletLine(line) !== firstContentIsBullet,
-    );
-    if (unexpectedContent) {
-      throw new Error(
-        `Unexpected content outside canonical sections: "${unexpectedContent}".`,
-      );
+    if (heading === "PROJECT HIGHLIGHTS") {
+      validateProjectHighlights(contentLines);
+    } else {
+      validateBulletSection(heading, contentLines);
     }
 
     if (headingIndex < SECTION_HEADINGS.length - 1) {
@@ -113,5 +109,49 @@ export function validateReportDraft(draft: string): void {
 }
 
 function isBulletLine(line: string | undefined): boolean {
-  return Boolean(line && /^[-*]\s+/.test(line));
+  return Boolean(line && /^(?:[-*•])\s+/.test(line));
+}
+
+function isBoldHeading(line: string | undefined): boolean {
+  return Boolean(line && /^\*\*.+\*\*$/.test(line));
+}
+
+function validateProjectHighlights(lines: string[]): void {
+  if (lines.every(isBulletLine)) {
+    return;
+  }
+
+  let cursor = 0;
+  while (cursor < lines.length) {
+    if (!isBoldHeading(lines[cursor])) {
+      if (cursor === 0) {
+        throw new Error('Section "PROJECT HIGHLIGHTS" must use canonical bullet structure.');
+      }
+      throw new Error(`Unexpected content outside canonical sections: "${lines[cursor]}".`);
+    }
+
+    cursor += 1;
+    let bulletCount = 0;
+    while (cursor < lines.length && isBulletLine(lines[cursor])) {
+      bulletCount += 1;
+      cursor += 1;
+    }
+
+    if (bulletCount === 0) {
+      throw new Error('Section "PROJECT HIGHLIGHTS" must use canonical bullet structure.');
+    }
+  }
+}
+
+function validateBulletSection(heading: string, lines: string[]): void {
+  const invalidIndex = lines.findIndex((line) => !isBulletLine(line));
+  if (invalidIndex === -1) {
+    return;
+  }
+
+  if (invalidIndex === 0) {
+    throw new Error(`Section "${heading}" must use canonical bullet structure.`);
+  }
+
+  throw new Error(`Unexpected content outside canonical sections: "${lines[invalidIndex]}".`);
 }

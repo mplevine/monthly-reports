@@ -152,4 +152,54 @@ Best regards,
 BI Team`),
     ).toThrow('Unexpected content outside canonical sections: "Additional Notes".');
   });
+
+  test("throws when a section uses prose instead of canonical bullet structure", () => {
+    expect(() =>
+      validateReportDraft(`**Subject: BI Team Monthly Report – May 2026**
+
+────────────────────────────────────────────────────────────
+PROJECT HIGHLIGHTS
+
+This month focused on steady delivery across analytics initiatives.
+
+────────────────────────────────────────────────────────────
+KEY WINS & METRICS
+
+• Win
+
+────────────────────────────────────────────────────────────
+UPCOMING PRIORITIES
+
+• Priority
+
+Best regards,
+BI Team`),
+    ).toThrow('Section "PROJECT HIGHLIGHTS" must use canonical bullet structure.');
+  });
+
+  test("accepts the documented canonical report shape", () => {
+    expect(() =>
+      validateReportDraft(`**Subject: BI Team Monthly Report – May 2026**
+
+────────────────────────────────────────────────────────────
+PROJECT HIGHLIGHTS
+
+**Modernization Program**
+• Completed the dashboard migration wave.
+• Reduced manual QA time by 25%.
+
+────────────────────────────────────────────────────────────
+KEY WINS & METRICS
+
+• Dashboard adoption reached 92%.
+
+────────────────────────────────────────────────────────────
+UPCOMING PRIORITIES
+
+• Finalize the June enablement plan.
+
+Best regards,
+BI Team`),
+    ).not.toThrow();
+  });
 });
