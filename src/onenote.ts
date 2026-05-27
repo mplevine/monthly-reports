@@ -76,7 +76,7 @@ export async function fetchOneNotePages(
 
   // List pages in that section created within the target month
   const pagesResponse = await client
-    .api(`/users/${config.userId}/onenote/sections/${sectionId}/pages`)
+    .api(`/me/onenote/sections/${sectionId}/pages`)
     .filter(
       `createdDateTime ge ${start} and createdDateTime lt ${end}`,
     )
@@ -90,7 +90,7 @@ export async function fetchOneNotePages(
   const results: OneNotePage[] = [];
   for (const page of pages) {
     const htmlContent = await client
-      .api(`/users/${config.userId}/onenote/pages/${page.id}/content`)
+      .api(`/me/onenote/pages/${page.id}/content`)
       .header("Accept", "text/html")
       .get() as string;
 
@@ -118,7 +118,7 @@ async function resolveSectionId(
   config: OneNoteConfig,
 ): Promise<string> {
   const notebooksResponse = await client
-    .api(`/users/${config.userId}/onenote/notebooks`)
+    .api(`/me/onenote/notebooks`)
     .filter(`displayName eq '${escapeOdataFilter(config.notebookName)}'`)
     .select("id,displayName")
     .get() as { value: { id: string; displayName: string }[] };
@@ -133,7 +133,7 @@ async function resolveSectionId(
   const notebookId = notebooks[0].id;
 
   const sectionsResponse = await client
-    .api(`/users/${config.userId}/onenote/notebooks/${notebookId}/sections`)
+    .api(`/me/onenote/notebooks/${notebookId}/sections`)
     .filter(`displayName eq '${escapeOdataFilter(config.sectionName)}'`)
     .select("id,displayName")
     .get() as { value: { id: string; displayName: string }[] };
