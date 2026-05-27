@@ -48,8 +48,9 @@ export async function getGraphAccessToken(
 ): Promise<string> {
   const scopes = ["Notes.Read"];
   const accounts = await app.getAllAccounts();
-  const preferredAccount =
-    accounts.find((account) => account.username === loginHint) ?? accounts[0];
+  const preferredAccount = accounts.find(
+    (account) => account.username === loginHint,
+  );
 
   if (preferredAccount) {
     try {
