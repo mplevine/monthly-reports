@@ -18,6 +18,12 @@ export function validateReportDraft(draft: string): void {
     throw new Error("Missing canonical report subject wrapper.");
   }
 
+  if (lines[2] !== REQUIRED_HEADINGS[0]) {
+    throw new Error(
+      `Expected section heading "${REQUIRED_HEADINGS[0]}" in canonical order.`,
+    );
+  }
+
   let expectedHeadingIndex = 0;
 
   for (const [index, line] of lines.entries()) {

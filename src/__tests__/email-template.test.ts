@@ -2,9 +2,9 @@ import { describe, expect, test } from "@jest/globals";
 import { formatEmail } from "../email-template.js";
 
 describe("formatEmail", () => {
-  test("wraps a generated body with the canonical subject line", () => {
+  test("wraps a generated body with a single canonical opening divider", () => {
     const result = formatEmail(
-      "PROJECT HIGHLIGHTS\n\nKEY WINS & METRICS\n\nUPCOMING PRIORITIES\n\nBest regards,\nBI Team",
+      "────────────────────────────────────────────────────────────\nPROJECT HIGHLIGHTS\n\n- Highlight\n\n────────────────────────────────────────────────────────────\nKEY WINS & METRICS\n\n- Win\n\n────────────────────────────────────────────────────────────\nUPCOMING PRIORITIES\n\n- Priority\n\nBest regards,\nBI Team",
       {
         year: 2026,
         month: 5,
@@ -12,6 +12,25 @@ describe("formatEmail", () => {
       },
     );
 
-    expect(result).toContain("**Subject: BI Team Monthly Report – May 2026**");
+    expect(result).toBe(`**Subject: BI Team Monthly Report – May 2026**
+
+────────────────────────────────────────────────────────────
+PROJECT HIGHLIGHTS
+
+- Highlight
+
+────────────────────────────────────────────────────────────
+KEY WINS & METRICS
+
+- Win
+
+────────────────────────────────────────────────────────────
+UPCOMING PRIORITIES
+
+- Priority
+
+Best regards,
+BI Team
+`);
   });
 });

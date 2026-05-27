@@ -24,12 +24,38 @@ BI Team`),
     ).toThrow("Missing canonical report subject wrapper.");
   });
 
+  test("throws when text appears between the opening divider and project highlights", () => {
+    expect(() =>
+      validateReportDraft(`**Subject: BI Team Monthly Report – May 2026**
+
+────────────────────────────────────────────────────────────
+Leadership summary
+
+PROJECT HIGHLIGHTS
+
+- Highlight
+
+────────────────────────────────────────────────────────────
+KEY WINS & METRICS
+
+- Win
+
+────────────────────────────────────────────────────────────
+UPCOMING PRIORITIES
+
+- Priority
+
+Best regards,
+BI Team`),
+    ).toThrow('Expected section heading "PROJECT HIGHLIGHTS" in canonical order.');
+  });
+
   test("throws when the canonical sections are missing", () => {
     expect(() =>
       validateReportDraft(
         "**Subject: BI Team Monthly Report – May 2026**\n\n────────────────────────────────────────────────────────────\n\nHi team",
       ),
-    ).toThrow('Missing required section heading "PROJECT HIGHLIGHTS".');
+    ).toThrow('Expected section heading "PROJECT HIGHLIGHTS" in canonical order.');
   });
 
   test("throws when the canonical sections are out of order", () => {

@@ -77,7 +77,11 @@ describe("generateReport", () => {
         }),
       ],
     });
-    expect(result.draft).toContain("**Subject: BI Team Monthly Report – May 2026**");
+    expect(result.draft.startsWith(`**Subject: BI Team Monthly Report – May 2026**
+
+────────────────────────────────────────────────────────────
+PROJECT HIGHLIGHTS
+`)).toBe(true);
     expect(result.draft).toContain("Dashboard rollout remained on track.");
     expect(result.auditTrail.model).toBe("openai/gpt-4.1");
     expect(result.auditTrail.usage).toEqual({
