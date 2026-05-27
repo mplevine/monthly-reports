@@ -1,28 +1,26 @@
 import { parseCliArgs } from "./cli/parse-args.js";
+import { runReportCommand } from "./commands/run-report.js";
 import { pathToFileURL } from "node:url";
 
-const HELP_TEXT = `Usage:
-  monthly-reports run [--period YYYY-MM] [--model MODEL]
-  monthly-reports rerender --bundle PATH [--model MODEL]
-`;
+export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
+  const command = parseCliArgs(argv);
 
-function isHelpRequest(argv: string[]): boolean {
-  return argv.length === 0 || argv.includes("--help") || argv.includes("-h");
-}
-
-export function main(argv: string[] = process.argv.slice(2)): number {
-  if (isHelpRequest(argv)) {
-    process.stdout.write(HELP_TEXT);
-    return 0;
+  if (command.command !== "run") {
+    throw new Error("Rerender is not available in this build.");
   }
 
-  parseCliArgs(argv);
+  const result = await runReportCommand(command);
+
+  console.log(`Report draft written to ${result.reportPath}`);
+  console.log(`Source bundle written to ${result.sourceBundlePath}`);
+  console.log(`Audit trail written to ${result.auditTrailPath}`);
+
   return 0;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
-    process.exitCode = main();
+    process.exitCode = await main();
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     process.stderr.write(`${message}\n`);
