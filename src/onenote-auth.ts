@@ -61,11 +61,12 @@ export async function getGraphAccessToken(
   loginHint: string,
 ): Promise<string> {
   validateDelegatedUserId(loginHint);
+  const normalizedLoginHint = normalizeUserPrincipalName(loginHint);
 
   const scopes = ["Notes.Read"];
   const accounts = await app.getAllAccounts();
   const preferredAccount = accounts.find(
-    (account) => account.username === loginHint,
+    (account) => normalizeAccountUsername(account.username) === normalizedLoginHint,
   );
 
   if (preferredAccount) {
@@ -74,7 +75,7 @@ export async function getGraphAccessToken(
         account: preferredAccount,
         scopes,
       });
-      if (hasMatchingAccessToken(silent, loginHint)) {
+      if (hasMatchingAccessToken(silent, normalizedLoginHint)) {
         return silent.accessToken;
       }
     } catch {
@@ -88,7 +89,7 @@ export async function getGraphAccessToken(
       loginHint,
       openBrowser,
     });
-    if (hasMatchingAccessToken(interactive, loginHint)) {
+    if (hasMatchingAccessToken(interactive, normalizedLoginHint)) {
       return interactive.accessToken;
     }
   } catch {
@@ -102,7 +103,7 @@ export async function getGraphAccessToken(
         console.log(message);
       },
     });
-    if (hasMatchingAccessToken(device, loginHint)) {
+    if (hasMatchingAccessToken(device, normalizedLoginHint)) {
       return device.accessToken;
     }
   } catch {
@@ -155,12 +156,12 @@ export function buildBrowserLaunchCommand(
 
 function hasMatchingAccessToken(
   result: TokenResult | null | undefined,
-  loginHint: string,
+  normalizedLoginHint: string,
 ): result is TokenResult & { accessToken: string; account: { username: string } } {
   return (
     typeof result?.accessToken === "string" &&
     result.accessToken.length > 0 &&
-    result.account?.username === loginHint
+    normalizeAccountUsername(result.account?.username) === normalizedLoginHint
   );
 }
 
@@ -174,4 +175,12 @@ function validateDelegatedUserId(loginHint: string): void {
 
 function isUserPrincipalName(value: string): boolean {
   return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value);
+}
+
+function normalizeUserPrincipalName(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function normalizeAccountUsername(value: string | undefined): string | undefined {
+  return typeof value === "string" ? normalizeUserPrincipalName(value) : undefined;
 }

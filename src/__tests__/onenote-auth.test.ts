@@ -137,6 +137,26 @@ describe("getGraphAccessToken", () => {
     expect(app.getAllAccounts).not.toHaveBeenCalled();
     expect(app.acquireTokenInteractive).not.toHaveBeenCalled();
   });
+
+  test("matches cached and returned UPNs case-insensitively", async () => {
+    const app = {
+      getAllAccounts: jest.fn(async () => [
+        { username: "bi-team@yourorg.onmicrosoft.com" },
+      ]),
+      acquireTokenSilent: jest.fn(async () => ({
+        accessToken: "graph-token",
+        account: { username: "bi-team@yourorg.onmicrosoft.com" },
+      })),
+      acquireTokenInteractive: jest.fn(),
+      acquireTokenByDeviceCode: jest.fn(),
+    };
+
+    await expect(
+      getGraphAccessToken(app as never, "BI-Team@YourOrg.onmicrosoft.com"),
+    ).resolves.toBe("graph-token");
+    expect(app.acquireTokenSilent).toHaveBeenCalledTimes(1);
+    expect(app.acquireTokenInteractive).not.toHaveBeenCalled();
+  });
 });
 
 describe("buildBrowserLaunchCommand", () => {
