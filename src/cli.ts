@@ -1,12 +1,7 @@
-import { parseCliArgs } from "./cli/parse-args.js";
+import { parseCliArgs, renderHelpText } from "./cli/parse-args.js";
+import { rerenderReportCommand } from "./commands/rerender-report.js";
 import { runReportCommand } from "./commands/run-report.js";
 import { pathToFileURL } from "node:url";
-
-const HELP_TEXT = `Usage:
-  monthly-reports run [--period YYYY-MM] [--model MODEL]
-
-rerender is not available in this build.
-`;
 
 function isHelpRequest(argv: string[]): boolean {
   return argv.length === 0 || argv.includes("--help") || argv.includes("-h");
@@ -14,17 +9,15 @@ function isHelpRequest(argv: string[]): boolean {
 
 export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
   if (isHelpRequest(argv)) {
-    process.stdout.write(HELP_TEXT);
+    process.stdout.write(renderHelpText());
     return 0;
   }
 
   const command = parseCliArgs(argv);
-
-  if (command.command !== "run") {
-    throw new Error("Rerender is not available in this build.");
-  }
-
-  const result = await runReportCommand(command);
+  const result =
+    command.command === "run"
+      ? await runReportCommand(command)
+      : await rerenderReportCommand(command);
 
   console.log(`Report draft written to ${result.reportPath}`);
   console.log(`Source bundle written to ${result.sourceBundlePath}`);

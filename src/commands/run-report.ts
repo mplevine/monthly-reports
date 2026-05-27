@@ -5,7 +5,7 @@ import { createPublicClient, getGraphAccessToken } from "../onenote-auth.js";
 import { fetchOneNotePages } from "../onenote.js";
 import { generateReport } from "../report-generator.js";
 import { buildSourceBundle } from "../source-bundle.js";
-import { AppConfig, CliCommand, ModelProvider } from "../types.js";
+import { AppConfig, CliCommand, ModelProvider, RunArtifacts } from "../types.js";
 
 type RunCommand = Extract<CliCommand, { command: "run" }>;
 
@@ -41,7 +41,7 @@ async function fetchBundleFromOneNote(
 export async function runReportCommand(
   command: RunCommand,
   deps: Partial<RunReportCommandDependencies> = {},
-) {
+): Promise<RunArtifacts> {
   const resolvedDeps: RunReportCommandDependencies = {
     loadAppConfig,
     fetchBundleFromOneNote,

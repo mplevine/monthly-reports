@@ -5,6 +5,11 @@ const MONTH_NAMES = [
   "July", "August", "September", "October", "November", "December",
 ] as const;
 
+const HELP_TEXT = `Usage:
+  monthly-reports run [--period YYYY-MM] [--model MODEL]
+  monthly-reports rerender --bundle PATH [--model MODEL]
+`;
+
 function buildPeriod(year: number, month: number): ReportPeriod {
   return { year, month, monthName: MONTH_NAMES[month - 1] };
 }
@@ -94,4 +99,8 @@ export function parseCliArgs(argv: string[], now = new Date()): CliCommand {
   }
 
   throw new Error(`Unknown command "${command ?? ""}". Use "run" or "rerender".`);
+}
+
+export function renderHelpText(): string {
+  return HELP_TEXT;
 }

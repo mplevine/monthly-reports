@@ -5,6 +5,7 @@ import {
   ReportGenerationResult,
   ReportPeriod,
   RepoConfigFile,
+  RunArtifacts,
 } from "./types.js";
 
 export async function writeRunArtifacts(
@@ -12,7 +13,7 @@ export async function writeRunArtifacts(
   period: ReportPeriod,
   bundle: OneNoteSourceBundle,
   generation: ReportGenerationResult,
-) {
+): Promise<RunArtifacts> {
   const runId = new Date().toISOString().replace(/[:.]/g, "-");
   const periodDirectory = `${period.year}-${String(period.month).padStart(2, "0")}`;
   const directory = path.join(output.rootDirectory, periodDirectory, runId);

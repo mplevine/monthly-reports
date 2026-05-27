@@ -134,6 +134,13 @@ export interface ReportGenerationResult {
   };
 }
 
+export interface RunArtifacts {
+  directory: string;
+  reportPath: string;
+  sourceBundlePath: string;
+  auditTrailPath: string;
+}
+
 export type CliCommand =
   | { command: "run"; period: ReportPeriod; modelOverride?: string }
   | { command: "rerender"; bundlePath: string; modelOverride?: string };
