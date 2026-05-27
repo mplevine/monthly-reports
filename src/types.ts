@@ -97,6 +97,37 @@ export interface ReportEmailData {
   rawBody?: string;
 }
 
+export interface ModelRequest {
+  model: string;
+  temperature: number;
+  maxTokens: number;
+  messages: Array<{ role: "system" | "user"; content: string }>;
+}
+
+export interface ModelResponse {
+  content: string;
+  usage: Record<string, number | undefined>;
+  rawResponse: unknown;
+}
+
+export interface ModelProvider {
+  generate(request: ModelRequest): Promise<ModelResponse>;
+}
+
+export interface ReportGenerationResult {
+  draft: string;
+  auditTrail: {
+    generatedAt: string;
+    model: string;
+    prompts: {
+      system: string;
+      user: string;
+    };
+    usage: Record<string, number | undefined>;
+    rawResponse: unknown;
+  };
+}
+
 export type CliCommand =
   | { command: "run"; period: ReportPeriod; modelOverride?: string }
   | { command: "rerender"; bundlePath: string; modelOverride?: string };

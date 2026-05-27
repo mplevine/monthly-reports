@@ -1,117 +1,89 @@
-import { beforeEach, describe, expect, jest, test } from "@jest/globals";
-import { prompt } from "@copilot-extensions/preview-sdk";
-import { combineNotes, generateReport } from "../report-generator.js";
-import { OneNotePage, ReportPeriod } from "../types.js";
+import { describe, expect, jest, test } from "@jest/globals";
+import { generateReport } from "../report-generator.js";
+import {
+  ModelProvider,
+  OneNoteSourceBundle,
+  ReportGenerationResult,
+} from "../types.js";
 
-const SAMPLE_PAGES: OneNotePage[] = [
-  {
-    id: "page-1",
-    title: "May 1 Team Standup",
-    content: "Discussed Q2 dashboard rollout. Timeline on track.",
-    createdDateTime: "2025-05-01T10:00:00Z",
-    lastModifiedDateTime: "2025-05-01T10:30:00Z",
+const MAY_2026_BUNDLE: OneNoteSourceBundle = {
+  schemaVersion: 1,
+  createdAt: "2026-05-31T12:00:00Z",
+  period: {
+    month: 5,
+    monthName: "May",
+    year: 2026,
   },
-  {
-    id: "page-2",
-    title: "May 15 Sprint Review",
-    content: "Completed data pipeline migration. 3 stories delivered.",
-    createdDateTime: "2025-05-15T14:00:00Z",
-    lastModifiedDateTime: "2025-05-15T15:00:00Z",
+  source: {
+    kind: "onenote",
+    userId: "bi.team@example.com",
+    notebookName: "BI Team",
+    sectionName: "Meeting Notes",
   },
-];
-
-const MAY_2025: ReportPeriod = { month: 5, year: 2025, monthName: "May" };
-
-const mockPrompt = prompt as jest.MockedFunction<typeof prompt>;
-
-describe("combineNotes", () => {
-  test("combines all pages into a single document", () => {
-    const result = combineNotes(SAMPLE_PAGES);
-    expect(result).toContain("May 1 Team Standup");
-    expect(result).toContain("May 15 Sprint Review");
-    expect(result).toContain("Q2 dashboard rollout");
-    expect(result).toContain("data pipeline migration");
-  });
-
-  test("uses markdown headings for each page title", () => {
-    const result = combineNotes(SAMPLE_PAGES);
-    expect(result).toContain("## May 1 Team Standup");
-    expect(result).toContain("## May 15 Sprint Review");
-  });
-
-  test("separates pages with a horizontal rule", () => {
-    const result = combineNotes(SAMPLE_PAGES);
-    expect(result).toContain("---");
-  });
-
-  test("returns empty string for an empty page array", () => {
-    const result = combineNotes([]);
-    expect(result).toBe("");
-  });
-
-  test("handles a single page without a separator", () => {
-    const result = combineNotes([SAMPLE_PAGES[0]]);
-    expect(result).toContain("## May 1 Team Standup");
-    expect(result).not.toContain("---");
-  });
-});
+  pages: [
+    {
+      id: "page-1",
+      title: "May 1 Team Standup",
+      content: "Discussed Q2 dashboard rollout. Timeline on track.",
+      createdDateTime: "2026-05-01T10:00:00Z",
+      lastModifiedDateTime: "2026-05-01T10:30:00Z",
+    },
+    {
+      id: "page-2",
+      title: "May 15 Sprint Review",
+      content: "Completed data pipeline migration. 3 stories delivered.",
+      createdDateTime: "2026-05-15T14:00:00Z",
+      lastModifiedDateTime: "2026-05-15T15:00:00Z",
+    },
+  ],
+};
 
 describe("generateReport", () => {
-  beforeEach(() => {
-    mockPrompt.mockReset();
-  });
+  test("builds prompts, calls the provider, and returns an audited report draft", async () => {
+    const generate = jest.fn<
+      ModelProvider["generate"]
+    >(async (): Promise<ReportGenerationResult["auditTrail"] & { content: string }> => ({
+      content:
+        "────────────────────────────────────────────────────────────\nPROJECT HIGHLIGHTS\n\n- Dashboard rollout remained on track.\n\n────────────────────────────────────────────────────────────\nKEY WINS & METRICS\n\n- Completed the data pipeline migration.\n\n────────────────────────────────────────────────────────────\nUPCOMING PRIORITIES\n\n- Finalize leadership dashboard enablement.\n\nBest regards,\nBI Team",
+      usage: { prompt_tokens: 100, completion_tokens: 25 },
+      rawResponse: { id: "resp-123" },
+      generatedAt: "ignored",
+      model: "ignored",
+      prompts: { system: "ignored", user: "ignored" },
+    }));
 
-  test("calls the Copilot prompt with system and user messages", async () => {
-    mockPrompt.mockResolvedValue({
-      message: {
-        role: "assistant",
-        content: "Hi Leadership,\n\nHere is the May 2025 update.",
-      },
-      requestId: "req-123",
-    } as Awaited<ReturnType<typeof prompt>>);
+    const provider: ModelProvider = { generate };
 
-    const result = await generateReport(SAMPLE_PAGES, MAY_2025, "test-token");
+    const result = await generateReport(
+      MAY_2026_BUNDLE,
+      provider,
+      "openai/gpt-4.1",
+      0.2,
+      1200,
+    );
 
-    expect(mockPrompt).toHaveBeenCalledTimes(1);
-    const callArgs = mockPrompt.mock.calls[0][0] as {
-      token: string;
-      messages: Array<{ role: string; content: string }>;
-    };
-    expect(callArgs.token).toBe("test-token");
-    expect(callArgs.messages).toHaveLength(2);
-    expect(callArgs.messages[0].role).toBe("system");
-    expect(callArgs.messages[1].role).toBe("user");
-  });
-
-  test("wraps the AI response in the email template", async () => {
-    mockPrompt.mockResolvedValue({
-      message: {
-        role: "assistant",
-        content: "Hi Leadership,\n\nHere is the May 2025 update.",
-      },
-      requestId: "req-123",
-    } as Awaited<ReturnType<typeof prompt>>);
-
-    const result = await generateReport(SAMPLE_PAGES, MAY_2025, "test-token");
-
-    expect(result).toContain("Subject: BI Team Monthly Report – May 2025");
-    expect(result).toContain("May 2025 update");
-  });
-
-  test("passes the meeting notes content to the LLM", async () => {
-    mockPrompt.mockResolvedValue({
-      message: { role: "assistant", content: "Email body." },
-      requestId: "req-456",
-    } as Awaited<ReturnType<typeof prompt>>);
-
-    await generateReport(SAMPLE_PAGES, MAY_2025, "test-token");
-
-    const callArgs = mockPrompt.mock.calls[0][0] as {
-      messages: Array<{ role: string; content: string }>;
-    };
-    const userMsg = callArgs.messages[1].content;
-    expect(userMsg).toContain("Q2 dashboard rollout");
-    expect(userMsg).toContain("data pipeline migration");
+    expect(generate).toHaveBeenCalledWith({
+      model: "openai/gpt-4.1",
+      temperature: 0.2,
+      maxTokens: 1200,
+      messages: [
+        expect.objectContaining({
+          role: "system",
+          content: expect.stringContaining("Return a leadership email body for May 2026"),
+        }),
+        expect.objectContaining({
+          role: "user",
+          content: expect.stringContaining("Q2 dashboard rollout"),
+        }),
+      ],
+    });
+    expect(result.draft).toContain("**Subject: BI Team Monthly Report – May 2026**");
+    expect(result.draft).toContain("Dashboard rollout remained on track.");
+    expect(result.auditTrail.model).toBe("openai/gpt-4.1");
+    expect(result.auditTrail.usage).toEqual({
+      prompt_tokens: 100,
+      completion_tokens: 25,
+    });
+    expect(result.auditTrail.rawResponse).toEqual({ id: "resp-123" });
   });
 });
-

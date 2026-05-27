@@ -1,0 +1,57 @@
+import { describe, expect, test } from "@jest/globals";
+import { validateReportDraft } from "../report-validator.js";
+
+describe("validateReportDraft", () => {
+  test("throws when the canonical sections are missing", () => {
+    expect(() =>
+      validateReportDraft("**Subject: BI Team Monthly Report – May 2026**\n\nHi team"),
+    ).toThrow('Missing required section heading "PROJECT HIGHLIGHTS".');
+  });
+
+  test("throws when the canonical sections are out of order", () => {
+    expect(() =>
+      validateReportDraft(`**Subject: BI Team Monthly Report – May 2026**
+
+────────────────────────────────────────────────────────────
+KEY WINS & METRICS
+
+- Win
+
+────────────────────────────────────────────────────────────
+PROJECT HIGHLIGHTS
+
+- Highlight
+
+────────────────────────────────────────────────────────────
+UPCOMING PRIORITIES
+
+- Priority
+
+Best regards,
+BI Team`),
+    ).toThrow('Expected section heading "PROJECT HIGHLIGHTS" in canonical order.');
+  });
+
+  test("throws when a required section heading is not preceded by a divider", () => {
+    expect(() =>
+      validateReportDraft(`**Subject: BI Team Monthly Report – May 2026**
+
+────────────────────────────────────────────────────────────
+PROJECT HIGHLIGHTS
+
+- Highlight
+
+KEY WINS & METRICS
+
+- Win
+
+────────────────────────────────────────────────────────────
+UPCOMING PRIORITIES
+
+- Priority
+
+Best regards,
+BI Team`),
+    ).toThrow('Expected divider before section heading "KEY WINS & METRICS".');
+  });
+});
