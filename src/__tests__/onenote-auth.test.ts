@@ -41,4 +41,21 @@ describe("getGraphAccessToken", () => {
       getGraphAccessToken(app as never, "bi-team@yourorg.onmicrosoft.com"),
     ).rejects.toThrow("Failed to acquire a delegated Microsoft Graph access token.");
   });
+
+  test("uses device code after interactive auth returns without an access token", async () => {
+    const app = {
+      getAllAccounts: jest.fn(async () => []),
+      acquireTokenSilent: jest.fn(),
+      acquireTokenInteractive: jest.fn(async () => ({})),
+      acquireTokenByDeviceCode: jest.fn(async () => ({
+        accessToken: "device-token",
+      })),
+    };
+
+    await expect(
+      getGraphAccessToken(app as never, "bi-team@yourorg.onmicrosoft.com"),
+    ).resolves.toBe("device-token");
+    expect(app.acquireTokenInteractive).toHaveBeenCalledTimes(1);
+    expect(app.acquireTokenByDeviceCode).toHaveBeenCalledTimes(1);
+  });
 });

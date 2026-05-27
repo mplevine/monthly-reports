@@ -16,7 +16,7 @@ describe("buildSourceBundle", () => {
         {
           id: "page-1",
           title: "May 1 Standup",
-          content: "Discussed Q2 dashboard rollout.",
+          content: "\n  Discussed Q2 dashboard rollout.  \n",
           createdDateTime: "2026-05-01T14:00:00Z",
           lastModifiedDateTime: "2026-05-01T14:30:00Z",
         },

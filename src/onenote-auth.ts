@@ -75,19 +75,21 @@ export async function getGraphAccessToken(
       return interactive.accessToken;
     }
   } catch {
-    try {
-      const device = await app.acquireTokenByDeviceCode({
-        scopes,
-        deviceCodeCallback: ({ message }) => {
-          console.log(message);
-        },
-      });
-      if (device?.accessToken) {
-        return device.accessToken;
-      }
-    } catch {
-      // fall through to the final delegated-auth error
+    // fall through to device-code auth
+  }
+
+  try {
+    const device = await app.acquireTokenByDeviceCode({
+      scopes,
+      deviceCodeCallback: ({ message }) => {
+        console.log(message);
+      },
+    });
+    if (device?.accessToken) {
+      return device.accessToken;
     }
+  } catch {
+    // fall through to the final delegated-auth error
   }
 
   throw new Error("Failed to acquire a delegated Microsoft Graph access token.");
