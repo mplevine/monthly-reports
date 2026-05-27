@@ -4,3 +4,8 @@ dist/
 *.js.map
 coverage/
 reports/generated/
+
+# Graphify output/cache
+**/graphify-out/
+.graphify*
+!.graphifyignore
