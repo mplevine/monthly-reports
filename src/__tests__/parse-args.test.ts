@@ -40,6 +40,18 @@ describe("parseCliArgs", () => {
     );
   });
 
+  test("rejects duplicate --period flags", () => {
+    expect(() => parseCliArgs(["run", "--period", "2026-05", "--period", "2026-06"])).toThrow(
+      'Duplicate argument "--period" for the run command.',
+    );
+  });
+
+  test("rejects duplicate --model flags on run", () => {
+    expect(() => parseCliArgs(["run", "--model", "a", "--model", "b"])).toThrow(
+      'Duplicate argument "--model" for the run command.',
+    );
+  });
+
   test("rejects unknown positional tokens", () => {
     expect(() => parseCliArgs(["run", "garbage"])).toThrow(
       'Unexpected positional argument "garbage" for the run command.',
@@ -49,6 +61,18 @@ describe("parseCliArgs", () => {
   test("requires a real bundle path for rerender", () => {
     expect(() => parseCliArgs(["rerender", "--bundle", "--model"])).toThrow(
       'Missing value for "--bundle".',
+    );
+  });
+
+  test("rejects duplicate --bundle flags", () => {
+    expect(() => parseCliArgs(["rerender", "--bundle", "a.json", "--bundle", "b.json"])).toThrow(
+      'Duplicate argument "--bundle" for the rerender command.',
+    );
+  });
+
+  test("rejects duplicate --model flags on rerender", () => {
+    expect(() => parseCliArgs(["rerender", "--bundle", "a.json", "--model", "a", "--model", "b"])).toThrow(
+      'Duplicate argument "--model" for the rerender command.',
     );
   });
 

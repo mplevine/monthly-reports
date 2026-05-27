@@ -56,6 +56,10 @@ function parseOptions(
       throw new Error(`Missing value for "${token}".`);
     }
 
+    if (args.has(token)) {
+      throw new Error(`Duplicate argument "${token}" for the ${command} command.`);
+    }
+
     args.set(token, value);
     index += 1;
   }
