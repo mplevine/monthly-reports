@@ -2,7 +2,21 @@ import { parseCliArgs } from "./cli/parse-args.js";
 import { runReportCommand } from "./commands/run-report.js";
 import { pathToFileURL } from "node:url";
 
+const HELP_TEXT = `Usage:
+  monthly-reports run [--period YYYY-MM] [--model MODEL]
+  monthly-reports rerender --bundle PATH [--model MODEL]
+`;
+
+function isHelpRequest(argv: string[]): boolean {
+  return argv.length === 0 || argv.includes("--help") || argv.includes("-h");
+}
+
 export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
+  if (isHelpRequest(argv)) {
+    process.stdout.write(HELP_TEXT);
+    return 0;
+  }
+
   const command = parseCliArgs(argv);
 
   if (command.command !== "run") {
